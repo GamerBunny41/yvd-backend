@@ -12,6 +12,8 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 tasks = {}
 tasks_lock = threading.Lock()
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
 
 def fmt_duration(secs):
     if not secs:
@@ -22,7 +24,13 @@ def fmt_duration(secs):
 
 
 def build_ydl_opts(cookies=None, cookie_format="header"):
-    opts = {"quiet": True, "no_warnings": True, "nocheckcertificate": True}
+    opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "nocheckcertificate": True,
+        "http_headers": {"User-Agent": USER_AGENT},
+        "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
+    }
     if cookies and cookies.strip():
         if cookie_format == "netscape":
             cpath = os.path.join(DOWNLOAD_DIR, f"ck_{uuid.uuid4().hex}.txt")
@@ -30,7 +38,7 @@ def build_ydl_opts(cookies=None, cookie_format="header"):
                 f.write(cookies)
             opts["cookiefile"] = cpath
         else:
-            opts["http_headers"] = {"Cookie": cookies}
+            opts["http_headers"]["Cookie"] = cookies
     return opts
 
 
