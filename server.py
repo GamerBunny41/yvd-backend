@@ -31,8 +31,7 @@ def build_ydl_opts(cookies=None, cookie_format="header"):
         "http_headers": {"User-Agent": USER_AGENT},
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "web"],
-                "player_skip": ["configs"],
+                "player_client": ["ios"],
             }
         },
     }
