@@ -201,11 +201,8 @@ def _do_download(task_id, url, fmt, q_num, cookies, cookie_fmt, out_base):
             }]
         elif fmt == "audio":
             opts["format"] = "bestaudio[ext=m4a]/bestaudio/best"
-        else:
-            opts["format"] = (
-                f"bestvideo[height<={q_num}][ext=mp4]+bestaudio[ext=m4a]"
-                f"/best[height<={q_num}][ext=mp4]/best[height<={q_num}]/best"
-            )
+       else:
+            opts["format"] = "bestvideo/best+bestaudio/best"
             opts["merge_output_format"] = "mp4"
 
         with yt_dlp.YoutubeDL(opts) as ydl:
