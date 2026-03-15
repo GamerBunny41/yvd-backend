@@ -29,7 +29,12 @@ def build_ydl_opts(cookies=None, cookie_format="header"):
         "no_warnings": True,
         "nocheckcertificate": True,
         "http_headers": {"User-Agent": USER_AGENT},
-        "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["web"],
+                "player_skip": ["configs"],
+            }
+        },
     }
     if cookies and cookies.strip():
         if cookie_format == "netscape":
