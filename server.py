@@ -1,10 +1,7 @@
-"""
-YVD Backend - Railway/Cloud Ready Version
-"""
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import yt_dlp
-import os, uuid, threading, time, glob, socket
+import os, uuid, threading, time, glob
 
 app = Flask(__name__)
 CORS(app)
@@ -12,7 +9,7 @@ CORS(app)
 DOWNLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-tasks: dict = {}
+tasks = {}
 tasks_lock = threading.Lock()
 
 
@@ -25,11 +22,7 @@ def fmt_duration(secs):
 
 
 def build_ydl_opts(cookies=None, cookie_format="header"):
-    opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "nocheckcertificate": True,
-    }
+    opts = {"quiet": True, "no_warnings": True, "nocheckcertificate": True}
     if cookies and cookies.strip():
         if cookie_format == "netscape":
             cpath = os.path.join(DOWNLOAD_DIR, f"ck_{uuid.uuid4().hex}.txt")
@@ -63,11 +56,7 @@ def cleanup_old_files():
 
 @app.route("/")
 def index():
-    return jsonify({
-        "status": "running",
-        "message": "YVD Backend chal raha hai!",
-        "yt_dlp": yt_dlp.version.__version__
-    })
+    return jsonify({"status": "running", "message": "YVD Backend chal raha hai!", "yt_dlp": yt_dlp.version.__version__})
 
 
 @app.route("/api/health")
@@ -111,9 +100,7 @@ def get_info():
 
         thumb = info.get("thumbnail", "")
         if not thumb and info.get("thumbnails"):
-            thumb = max(info["thumbnails"],
-                        key=lambda t: t.get("width", 0) * t.get("height", 0),
-                        default={}).get("url", "")
+            thumb = max(info["thumbnails"], key=lambda t: t.get("width", 0) * t.get("height", 0), default={}).get("url", "")
 
         return jsonify({
             "success": True,
@@ -130,11 +117,9 @@ def get_info():
     except yt_dlp.utils.DownloadError as e:
         msg = str(e)
         if "Sign in" in msg or "login" in msg.lower():
-            return jsonify({"success": False,
-                "error": "Age-restricted. Settings mein cookies daalo!"}), 403
+            return jsonify({"success": False, "error": "Age-restricted. Settings mein cookies daalo!"}), 403
         if "Private" in msg:
-            return jsonify({"success": False,
-                "error": "Private video. Cookies set karo."}), 403
+            return jsonify({"success": False, "error": "Private video. Cookies set karo."}), 403
         return jsonify({"success": False, "error": msg[:300]}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)[:300]}), 500
@@ -159,9 +144,7 @@ def start_download():
     with tasks_lock:
         tasks[task_id] = {"status": "starting", "percent": 0, "file": None, "error": None}
 
-    t = threading.Thread(target=_do_download,
-                         args=(task_id, url, fmt, q_num, cookies, cookie_fmt, out_base),
-                         daemon=True)
+    t = threading.Thread(target=_do_download, args=(task_id, url, fmt, q_num, cookies, cookie_fmt, out_base), daemon=True)
     t.start()
 
     for _ in range(360):
@@ -194,15 +177,11 @@ def _do_download(task_id, url, fmt, q_num, cookies, cookie_fmt, out_base):
 
         if fmt == "mp3":
             opts["format"] = "bestaudio/best"
-            opts["postprocessors"] = [{
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
-            }]
+            opts["postprocessors"] = [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}]
         elif fmt == "audio":
-            opts["format"] = "bestaudio[ext=m4a]/bestaudio/best"
-       else:
-            opts["format"] = "bestvideo/best+bestaudio/best"
+            opts["format"] = "bestaudio/best"
+        else:
+            opts["format"] = "bestvideo+bestaudio/best"
             opts["merge_output_format"] = "mp4"
 
         with yt_dlp.YoutubeDL(opts) as ydl:
@@ -247,11 +226,7 @@ def get_status(task_id):
     return jsonify(resp)
 
 
-# Cleanup thread
-threading.Thread(
-    target=lambda: [time.sleep(1800) or cleanup_old_files() for _ in iter(int, 1)],
-    daemon=True
-).start()
+threading.Thread(target=lambda: [time.sleep(1800) or cleanup_old_files() for _ in iter(int, 1)], daemon=True).start()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
